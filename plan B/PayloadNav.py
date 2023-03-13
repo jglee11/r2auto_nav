@@ -61,5 +61,56 @@ def euler_from_quaternion(x, y, z, w):
     return roll_x, pitch_y, yaw_z # in radians
   
   
-  
+  class AutoNav(Node):
+
+    def __init__(self):
+        super().__init__('auto_nav')
+        
+        # create publisher for moving TurtleBot
+        self.publisher_ = self.create_publisher(Twist,'cmd_vel',10)
+        # self.get_logger().info('Created publisher')
+        
+        # create subscription to track orientation
+        self.odom_subscription = self.create_subscription(
+            Odometry,
+            'odom',
+            self.odom_callback,
+            10)
+        # self.get_logger().info('Created subscriber')
+        self.odom_subscription  # prevent unused variable warning
+        # initialize variables
+        self.roll = 0
+        self.pitch = 0
+        self.yaw = 0
+        self.x = 0
+        self.y = 0
+        
+         # create subscription to track occupancy
+        self.occ_subscription = self.create_subscription(
+            OccupancyGrid,
+            'map',
+            self.occ_callback,
+            qos_profile_sensor_data)
+        self.occ_subscription  # prevent unused variable warning
+        self.occdata = np.array([])
+        
+        # create subscription to track lidar
+        self.scan_subscription = self.create_subscription(
+            LaserScan,
+            'scan',
+            self.scan_callback,
+            qos_profile_sensor_data)
+        self.scan_subscription  # prevent unused variable warning
+        self.laser_range = np.array([])
+
+        self.tfBuffer = tf2_ros.Buffer()
+        self.tfListener = tf2_ros.TransformListener(self.tfBuffer, self)
+
+        self.target_subscription = self.create_subscription(
+            Int8,
+            'hot_target',
+            self.target_callback,
+            10)
+        # self.get_logger().info('Created subscriber')
+        self.target_subscription  # prevent unused variable warning
 
